@@ -161,6 +161,26 @@
   .map-seat .sn { font-weight: 700; }
   .map-seat .sp { font-size: 0.85em; opacity: 0.9; letter-spacing: 0.5px; }
 
+  /* Seat list grid (no image mode) */
+  .seat-list-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 12px;
+  }
+  .seat-list-grid .map-seat {
+    position: relative;
+    transform: none;
+    width: 62px;
+    height: 62px;
+    min-width: unset;
+    max-width: unset;
+    font-size: 0.7rem;
+  }
+  .seat-list-grid .map-seat:hover {
+    transform: scale(1.12);
+  }
+
   /* Modal overlay */
   .modal-overlay {
     display: none;
@@ -850,10 +870,11 @@
           </div>
           <div class="floor-map-body" id="map-b1">
             <div class="floor-map-empty" id="empty-b1">
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
-              <span>請上傳 B1 平面圖，座位將自動疊加顯示</span>
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+              <span style="font-size:0.8rem">上傳 B1 平面圖後，座位將疊加在圖上</span>
             </div>
             <img id="img-b1" src="" alt="B1" style="display:none;width:100%">
+            <div id="seat-list-b1" class="seat-list-grid"></div>
           </div>
         </div>
         <input type="file" id="file-b1" accept="image/*" style="display:none" onchange="uploadFloorMap('b1',event)">
@@ -871,10 +892,11 @@
           </div>
           <div class="floor-map-body" id="map-1f">
             <div class="floor-map-empty" id="empty-1f">
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
-              <span>請上傳 1樓 平面圖，座位將自動疊加顯示</span>
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+              <span style="font-size:0.8rem">上傳 1樓 平面圖後，座位將疊加在圖上</span>
             </div>
             <img id="img-1f" src="" alt="1F" style="display:none;width:100%">
+            <div id="seat-list-1f" class="seat-list-grid"></div>
           </div>
         </div>
         <input type="file" id="file-1f" accept="image/*" style="display:none" onchange="uploadFloorMap('1f',event)">
@@ -1140,7 +1162,36 @@ function renderFloorMap(floor) {
   if (!mapEl) return;
   mapEl.querySelectorAll('.map-seat').forEach(b => b.remove());
   const imgEl = document.getElementById('img-' + floor);
-  if (!imgEl || imgEl.style.display === 'none') return;
+  const hasImg = imgEl && imgEl.style.display !== 'none';
+  // Show seat list mode when no image; overlay mode when image loaded
+  const listEl = document.getElementById('seat-list-' + floor);
+  if (!hasImg) {
+    if (listEl) {
+      listEl.innerHTML = '';
+      Object.entries(SEAT_POS).forEach(([id, pos]) => {
+        if (getSeatFloor(id) !== floor) return;
+        const info = data[id];
+        const type = getSeatType(id);
+        const label = getSeatLabel(id);
+        const btn = document.createElement('button');
+        btn.className = `map-seat round type-${type} ${info ? 'occupied' : 'empty'}`;
+        btn.style.position = 'relative';
+        btn.style.transform = 'none';
+        btn.style.width = '60px';
+        btn.style.height = '60px';
+        btn.style.minWidth = '';
+        btn.style.maxWidth = '';
+        btn.onclick = () => handleSeatClick(id);
+        btn.title = id + (info ? ` | ${info.plate}` : ' — 空位');
+        btn.innerHTML = info
+          ? `<span class="sn">${label}</span><span class="sp">${info.plate}</span>`
+          : `<span class="sn">${label}</span>`;
+        listEl.appendChild(btn);
+      });
+    }
+    return;
+  }
+  if (listEl) listEl.innerHTML = '';
   Object.entries(SEAT_POS).forEach(([id, [lx, ty]]) => {
     if (getSeatFloor(id) !== floor) return;
     const info = data[id];
