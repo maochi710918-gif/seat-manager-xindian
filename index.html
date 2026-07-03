@@ -1,0 +1,1712 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>裕信汽車新店廠客休區座位管理系統</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Microsoft JhengHei', '微軟正黑體', Arial, sans-serif;
+    background: #f0f2f5;
+    min-height: 100vh;
+  }
+
+  header {
+    background: linear-gradient(135deg, #1a3c5e, #2d6a9f);
+    color: white;
+    padding: 14px 20px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  }
+  header h1 { font-size: 1.4rem; letter-spacing: 2px; }
+  header p { font-size: 0.8rem; opacity: 0.8; margin-top: 4px; }
+
+  .main-container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  /* Stats bar */
+  .stats-bar {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .stat-card {
+    background: white;
+    border-radius: 10px;
+    padding: 10px 18px;
+    flex: 1;
+    min-width: 120px;
+    text-align: center;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  }
+  .stat-card .num { font-size: 1.8rem; font-weight: 700; }
+  .stat-card .label { font-size: 0.75rem; color: #666; margin-top: 2px; }
+  .stat-card.total .num { color: #2d6a9f; }
+  .stat-card.occupied .num { color: #e05252; }
+  .stat-card.empty .num { color: #3aaa5c; }
+
+  /* Zone card */
+  .zone-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    overflow: hidden;
+  }
+  .zone-header {
+    padding: 10px 16px;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .zone-body {
+    padding: 16px;
+  }
+
+  /* B1 沙發 */
+  .zone-b1sofa .zone-header  { background: #1a3c5e; color: white; }
+  .zone-b1sofa .zone-body    { background: #e8f0fb; }
+  /* B1 圓桌 */
+  .zone-b1table .zone-header { background: #4a2060; color: white; }
+  .zone-b1table .zone-body   { background: #f3eafa; }
+  /* 1F 沙發 */
+  .zone-1fsofa .zone-header  { background: #1a6b45; color: white; }
+  .zone-1fsofa .zone-body    { background: #e8f5ee; }
+  /* 1F 木椅 */
+  .zone-1fwood .zone-header  { background: #7a4010; color: white; }
+  .zone-1fwood .zone-body    { background: #fdf0e8; }
+  /* 1F 圓桌 */
+  .zone-1ftable .zone-header { background: #8b6914; color: white; }
+  .zone-1ftable .zone-body   { background: #fdf5e0; }
+  /* 1F 包廂 */
+  .zone-1fvip .zone-header   { background: #8b1a1a; color: white; }
+  .zone-1fvip .zone-body     { background: #fdeaea; }
+
+  /* Seat grids */
+  .seats-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: flex-start;
+  }
+  .seats-grid.white-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+  }
+  .seats-grid.black-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .seats-grid.gold-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+  }
+
+  /* Seat button — circle */
+  .seat {
+    position: relative;
+    cursor: pointer;
+    border: none;
+    font-family: inherit;
+    transition: transform 0.15s, box-shadow 0.15s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+  }
+  .seat:hover { transform: scale(1.07); box-shadow: 0 4px 14px rgba(0,0,0,0.2); }
+  .seat:active { transform: scale(0.96); }
+
+  .seat.circle {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    font-size: 0.85rem;
+  }
+  .seat.square {
+    width: 100%;
+    height: 56px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+  }
+
+  /* Empty state per zone */
+  .zone-b1sofa  .seat.empty { background: #ddeeff; border: 2px solid #7ab3e0; color: #1a3c5e; }
+  .zone-b1table .seat.empty { background: #ede8f5; border: 2px solid #9b7fd4; color: #4a2060; }
+  .zone-1fsofa  .seat.empty { background: #d9f0e5; border: 2px solid #5db88a; color: #1a6b45; }
+  .zone-1fwood  .seat.empty { background: #fce8d5; border: 2px solid #c4814a; color: #7a4010; }
+  .zone-1ftable .seat.empty { background: #fdf5d0; border: 2px solid #c9a030; color: #7a5800; }
+  .zone-1fvip   .seat.empty { background: #fde8e8; border: 2px solid #d47070; color: #8b1a1a; }
+
+  /* Occupied state */
+  .seat.occupied {
+    background: linear-gradient(135deg, #ff6b6b, #e03a3a);
+    border: 2px solid #c0392b;
+    color: white;
+  }
+  .seat.occupied .seat-id { font-size: 0.65rem; opacity: 0.85; }
+  .seat.occupied .plate { font-size: 0.8rem; font-weight: 800; letter-spacing: 1px; }
+
+  /* Modal overlay */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: white;
+    border-radius: 16px;
+    width: 100%;
+    max-width: 440px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+    overflow: hidden;
+    animation: slideUp 0.2s ease;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(30px); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+  }
+
+  .modal-header {
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .modal-header h2 { font-size: 1.1rem; }
+  .modal-header .seat-badge {
+    background: #1a3c5e;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 700;
+  }
+
+  .modal-body { padding: 16px 20px; }
+
+  .form-group { margin-bottom: 14px; }
+  .form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .form-group select {
+    width: 100%; padding: 9px 12px;
+    border: 1.5px solid #d0d5dd; border-radius: 8px;
+    font-size: 0.95rem; font-family: inherit;
+    background: white; cursor: pointer;
+  }
+  .form-group select:focus { outline: none; border-color: #2d6a9f; box-shadow: 0 0 0 3px rgba(45,106,159,0.15); }
+  .form-group label {
+    display: block;
+    font-size: 0.85rem;
+    color: #555;
+    margin-bottom: 5px;
+    font-weight: 600;
+  }
+  .form-group input,
+  .form-group textarea {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1.5px solid #d0d5dd;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-family: inherit;
+    transition: border-color 0.2s;
+    resize: vertical;
+  }
+  .form-group input:focus,
+  .form-group textarea:focus {
+    outline: none;
+    border-color: #2d6a9f;
+    box-shadow: 0 0 0 3px rgba(45,106,159,0.15);
+  }
+  .required-star { color: #e03a3a; }
+
+  /* Info display (occupied view) */
+  .info-row {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  .info-row:last-child { border-bottom: none; }
+  .info-label {
+    font-size: 0.8rem;
+    color: #888;
+    min-width: 80px;
+    padding-top: 1px;
+  }
+  .info-value {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #222;
+    flex: 1;
+    word-break: break-all;
+  }
+  .plate-display {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: #1a3c5e;
+    letter-spacing: 2px;
+  }
+  .time-display { font-size: 0.8rem; color: #aaa; }
+
+  .modal-footer {
+    padding: 14px 20px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    border-top: 1px solid #f0f0f0;
+  }
+
+  .btn {
+    flex: 1;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    transition: opacity 0.15s, transform 0.1s;
+  }
+  .btn:hover { opacity: 0.88; }
+  .btn:active { transform: scale(0.97); }
+  .btn-primary { background: #2d6a9f; color: white; }
+  .btn-success { background: #3aaa5c; color: white; }
+  .btn-danger  { background: #e03a3a; color: white; }
+  .btn-warning { background: #f5a623; color: white; }
+  .move-seat-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .move-seat-btn { padding: 8px 14px; border: 2px solid #7ab3e0; background: #ddeeff; color: #1a3c5e; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 0.9rem; font-family: inherit; transition: background 0.15s; }
+  .move-seat-btn:hover { background: #b3d4f5; }
+  .btn-secondary { background: #eee; color: #444; }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: #1a3c5e;
+    color: white;
+    padding: 10px 24px;
+    border-radius: 30px;
+    font-size: 0.9rem;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+    opacity: 0;
+    transition: opacity 0.3s, transform 0.3s;
+    z-index: 9999;
+    white-space: nowrap;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* Search bar */
+  .search-bar {
+    background: white;
+    border-radius: 10px;
+    padding: 12px 16px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .search-bar input {
+    flex: 1;
+    min-width: 160px;
+    padding: 8px 12px;
+    border: 1.5px solid #d0d5dd;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-family: inherit;
+  }
+  .search-bar input:focus { outline: none; border-color: #2d6a9f; }
+  .search-result {
+    font-size: 0.85rem;
+    color: #555;
+    padding: 6px 0;
+  }
+  .search-highlight {
+    background: #fff9c4;
+    border: 2px solid #fbc02d !important;
+    animation: pulse 0.6s ease 3;
+  }
+  @keyframes pulse {
+    0%,100% { transform: scale(1); }
+    50%      { transform: scale(1.1); }
+  }
+
+  /* Floor plan */
+  .floorplan-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    overflow: hidden;
+  }
+  .floorplan-header {
+    background: linear-gradient(135deg, #3d3d3d, #5a5a5a);
+    color: white;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .floorplan-header span { font-weight: 700; font-size: 1rem; }
+  .floorplan-body {
+    padding: 12px;
+    position: relative;
+    background: #fafafa;
+  }
+  .floorplan-body img {
+    width: 100%;
+    max-height: 520px;
+    object-fit: contain;
+    border-radius: 6px;
+    display: block;
+  }
+  .floorplan-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 48px 20px;
+    color: #aaa;
+    font-size: 0.95rem;
+  }
+  .floorplan-empty svg { opacity: 0.35; }
+  .floorplan-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .btn-upload {
+    background: #f0f4ff;
+    border: 1.5px dashed #4a90d9;
+    color: #2d6a9f;
+    padding: 7px 14px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.15s;
+  }
+  .btn-upload:hover { background: #dceeff; }
+  .btn-del-img {
+    background: #fff0f0;
+    border: 1.5px solid #e8a0a0;
+    color: #c0392b;
+    padding: 7px 14px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.15s;
+  }
+  .btn-del-img:hover { background: #ffe0e0; }
+  #file-input { display: none; }
+
+  /* Zoom overlay */
+  .img-zoom-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+    cursor: zoom-out;
+  }
+  .img-zoom-overlay.open { display: flex; }
+  .img-zoom-overlay img {
+    max-width: 96vw;
+    max-height: 92vh;
+    object-fit: contain;
+    border-radius: 8px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+  }
+  .zoom-close {
+    position: absolute;
+    top: 16px; right: 20px;
+    color: white;
+    font-size: 2rem;
+    cursor: pointer;
+    line-height: 1;
+    opacity: 0.8;
+  }
+  .zoom-close:hover { opacity: 1; }
+  .zoom-hint {
+    position: absolute;
+    bottom: 16px;
+    color: rgba(255,255,255,0.6);
+    font-size: 0.8rem;
+  }
+  .floorplan-body img { cursor: zoom-in; }
+
+  /* ── Content two-column layout ── */
+  .content-layout {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 16px;
+    align-items: start;
+  }
+  .zones-col { display: flex; flex-direction: column; gap: 16px; }
+
+  /* ── Sidebar ── */
+  .sidebar { display: flex; flex-direction: column; gap: 16px; }
+
+  /* ── 總表 Summary Table ── */
+  .summary-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    overflow: hidden;
+  }
+  .summary-header {
+    background: linear-gradient(135deg, #1a3c5e, #2d6a9f);
+    color: white;
+    padding: 10px 16px;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .summary-count {
+    background: rgba(255,255,255,0.25);
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+  }
+  .summary-body { padding: 0; max-height: 420px; overflow-y: auto; }
+  .summary-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+  }
+  .summary-table thead tr {
+    background: #f0f4fa;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+  .summary-table th {
+    padding: 7px 8px;
+    text-align: left;
+    color: #555;
+    font-weight: 700;
+    border-bottom: 1px solid #e0e0e0;
+    white-space: nowrap;
+  }
+  .summary-table td {
+    padding: 7px 8px;
+    border-bottom: 1px solid #f0f0f0;
+    vertical-align: top;
+  }
+  .summary-table tr:last-child td { border-bottom: none; }
+  .summary-table tr:hover td { background: #f8f9ff; cursor: pointer; }
+  .summary-seat-badge {
+    display: inline-block;
+    background: #1a3c5e;
+    color: white;
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .summary-plate { font-weight: 800; color: #c0392b; letter-spacing: 1px; }
+  .summary-empty {
+    text-align: center;
+    padding: 28px 16px;
+    color: #bbb;
+    font-size: 0.9rem;
+  }
+
+  /* ── 公告欄 Bulletin Board ── */
+  .notice-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    overflow: hidden;
+  }
+  .notice-header {
+    background: linear-gradient(135deg, #7b4f12, #b8860b);
+    color: white;
+    padding: 10px 16px;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
+  .notice-body { padding: 12px; }
+  .notice-input-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .notice-input-row textarea {
+    flex: 1;
+    border: 1.5px solid #d0d5dd;
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 0.85rem;
+    font-family: inherit;
+    resize: none;
+    height: 68px;
+    transition: border-color 0.2s;
+  }
+  .notice-input-row textarea:focus {
+    outline: none;
+    border-color: #b8860b;
+    box-shadow: 0 0 0 3px rgba(184,134,11,0.15);
+  }
+  .btn-notice-post {
+    background: #b8860b;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 0 14px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    white-space: nowrap;
+    transition: opacity 0.15s;
+  }
+  .btn-notice-post:hover { opacity: 0.85; }
+  .notice-list { display: flex; flex-direction: column; gap: 8px; max-height: 320px; overflow-y: auto; }
+  .notice-item {
+    background: #fffde7;
+    border: 1px solid #f0d060;
+    border-radius: 8px;
+    padding: 9px 12px;
+    position: relative;
+  }
+  .notice-text { font-size: 0.88rem; color: #333; line-height: 1.5; word-break: break-word; }
+  .notice-time { font-size: 0.72rem; color: #aaa; margin-top: 5px; }
+  .btn-notice-del {
+    position: absolute;
+    top: 7px; right: 8px;
+    background: none;
+    border: none;
+    color: #ccc;
+    font-size: 1rem;
+    cursor: pointer;
+    line-height: 1;
+    padding: 2px 4px;
+    border-radius: 4px;
+    transition: color 0.15s, background 0.15s;
+  }
+  .btn-notice-del:hover { color: #e03a3a; background: #fff0f0; }
+  .notice-empty {
+    text-align: center;
+    color: #ccc;
+    font-size: 0.85rem;
+    padding: 20px 0;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 900px) {
+    .content-layout { grid-template-columns: 1fr; }
+    .sidebar { flex-direction: row; flex-wrap: wrap; }
+    .summary-card, .notice-card { flex: 1; min-width: 280px; }
+    .summary-body { max-height: 260px; }
+    .notice-list { max-height: 200px; }
+  }
+  @media (max-width: 600px) {
+    .sidebar { flex-direction: column; }
+    .seats-grid.white-grid { grid-template-columns: repeat(3, 1fr); }
+    .seats-grid.gold-grid  { grid-template-columns: repeat(4, 1fr); }
+    .seat.circle { width: 62px; height: 62px; }
+  }
+  @media (max-width: 400px) {
+    .seats-grid.white-grid { grid-template-columns: repeat(3, 1fr); }
+    .seats-grid.green-grid { grid-template-columns: repeat(3, 1fr); }
+    .seat.circle { width: 56px; height: 56px; font-size: 0.75rem; }
+  }
+  /* ── Sync status bar ── */
+  .sync-bar {
+    background: #1a3c5e;
+    color: rgba(255,255,255,0.75);
+    font-size: 0.75rem;
+    text-align: center;
+    padding: 4px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 26px;
+  }
+  .sync-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    background: #aaa;
+    flex-shrink: 0;
+  }
+  .sync-dot.ok    { background: #4caf50; }
+  .sync-dot.busy  { background: #ffc107; animation: blink 0.8s infinite; }
+  .sync-dot.error { background: #f44336; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  .sync-bar .sync-time { opacity: 0.6; }
+
+  /* ── 服務專員總表 ── */
+  .advisor-board-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0,0,0,.08);
+    overflow: hidden;
+    margin-top: 0;
+  }
+  .advisor-board-header {
+    background: linear-gradient(135deg, #1a3c5e, #2d6a9f);
+    color: white;
+    padding: 14px 18px;
+    font-size: 1rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .advisor-board-sub {
+    font-size: 0.8rem;
+    font-weight: 400;
+    opacity: 0.8;
+    margin-left: auto;
+  }
+  .advisor-board-body {
+    padding: 16px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    min-height: 60px;
+  }
+  .advisor-empty {
+    color: #aaa;
+    font-size: 0.9rem;
+    margin: auto;
+  }
+  .advisor-col {
+    flex: 1 1 180px;
+    min-width: 160px;
+    max-width: 260px;
+    border-radius: 10px;
+    border: 2px solid #e8eef5;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .advisor-col-header {
+    background: #1a3c5e;
+    color: white;
+    padding: 8px 12px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .advisor-col-header .adv-count {
+    background: rgba(255,255,255,0.25);
+    border-radius: 10px;
+    padding: 1px 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  .advisor-col-unassigned .advisor-col-header {
+    background: #888;
+  }
+  .advisor-customer {
+    padding: 8px 10px;
+    border-bottom: 1px solid #f0f4f8;
+    cursor: pointer;
+    transition: background .15s;
+  }
+  .advisor-customer:last-child { border-bottom: none; }
+  .advisor-customer:hover { background: #f0f6ff; }
+  .adv-seat-plate {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 3px;
+  }
+  .adv-seat {
+    background: #1a3c5e;
+    color: white;
+    border-radius: 5px;
+    padding: 1px 6px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .adv-plate {
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: #c0392b;
+    letter-spacing: 1px;
+  }
+  .adv-name {
+    font-size: 0.78rem;
+    color: #555;
+  }
+  .adv-meta {
+    display: flex;
+    gap: 6px;
+    margin-top: 3px;
+    flex-wrap: wrap;
+  }
+  .adv-tag {
+    font-size: 0.7rem;
+    padding: 1px 6px;
+    border-radius: 10px;
+    background: #e8f0fb;
+    color: #2d6a9f;
+    white-space: nowrap;
+  }
+  .adv-tag.eta { background: #fff3cd; color: #856404; }
+  .adv-tag.overdue { background: #fde8e8; color: #c0392b; font-weight: 700; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>裕信汽車新店廠 · 客休區座位管理系統</h1>
+  <p>點擊座位可登錄或查詢客戶資訊</p>
+  <p id="sync-status" style="font-size:0.75rem;opacity:0.8;margin-top:4px;">🔄 連線中...</p>
+</header>
+
+
+<div class="main-container">
+
+  <!-- Stats -->
+  <div class="stats-bar">
+    <div class="stat-card total">
+      <div class="num" id="stat-total">0</div>
+      <div class="label">總座位數</div>
+    </div>
+    <div class="stat-card occupied">
+      <div class="num" id="stat-occupied">0</div>
+      <div class="label">已有客人</div>
+    </div>
+    <div class="stat-card empty">
+      <div class="num" id="stat-empty">0</div>
+      <div class="label">空位</div>
+    </div>
+  </div>
+
+  <!-- Search -->
+  <div class="search-bar">
+    <input type="text" id="search-input" placeholder="🔍 搜尋車牌 / 姓名 / 特徵..." oninput="doSearch()">
+    <div class="search-result" id="search-result"></div>
+  </div>
+
+  <!-- Floor Plan -->
+  <div class="floorplan-card">
+    <div class="floorplan-header">
+      <span>🗺️ 客休區配置圖</span>
+      <div class="floorplan-actions">
+        <button class="btn-upload" onclick="document.getElementById('file-input').click()">📁 上傳／更換圖片</button>
+        <button class="btn-del-img" id="btn-del-img" style="display:none" onclick="deleteFloorplan()">🗑️ 移除圖片</button>
+      </div>
+    </div>
+    <div class="floorplan-body" id="floorplan-body">
+      <div class="floorplan-empty" id="floorplan-empty">
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="1.5">
+          <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/>
+        </svg>
+        <span>尚未上傳配置圖，點擊右上角「上傳圖片」新增</span>
+      </div>
+      <img id="floorplan-img" src="" alt="客休區配置圖" style="display:none" onclick="openZoom()">
+    </div>
+    <input type="file" id="file-input" accept="image/*" onchange="uploadFloorplan(event)">
+  </div>
+
+  <!-- Zoom overlay -->
+  <div class="img-zoom-overlay" id="zoom-overlay" onclick="closeZoom()">
+    <span class="zoom-close" onclick="closeZoom()">✕</span>
+    <img id="zoom-img" src="" alt="放大圖">
+    <span class="zoom-hint">點擊任意處關閉</span>
+  </div>
+
+  <!-- Two-column layout: zones + sidebar -->
+  <div class="content-layout">
+
+    <!-- Left: seat zones -->
+    <div class="zones-col">
+
+      <!-- B1 沙發區 -->
+      <div class="zone-card zone-b1sofa">
+        <div class="zone-header">🅱️ B1 — 沙發區（方形座位）</div>
+        <div class="zone-body">
+          <div class="seats-grid" id="zone-b1sofa"></div>
+        </div>
+      </div>
+
+      <!-- B1 圓桌區 -->
+      <div class="zone-card zone-b1table">
+        <div class="zone-header">🅱️ B1 — 圓桌區</div>
+        <div class="zone-body">
+          <div class="seats-grid" id="zone-b1table"></div>
+        </div>
+      </div>
+
+      <!-- 1F 沙發區 -->
+      <div class="zone-card zone-1fsofa">
+        <div class="zone-header">1️⃣ 1樓 — 沙發區</div>
+        <div class="zone-body">
+          <div class="seats-grid" id="zone-1fsofa"></div>
+        </div>
+      </div>
+
+      <!-- 1F 木椅區 -->
+      <div class="zone-card zone-1fwood">
+        <div class="zone-header">1️⃣ 1樓 — 木椅區</div>
+        <div class="zone-body">
+          <div class="seats-grid" id="zone-1fwood"></div>
+        </div>
+      </div>
+
+      <!-- 1F 圓桌區 -->
+      <div class="zone-card zone-1ftable">
+        <div class="zone-header">1️⃣ 1樓 — 圓桌區</div>
+        <div class="zone-body">
+          <div class="seats-grid" id="zone-1ftable"></div>
+        </div>
+      </div>
+
+      <!-- 1F 包廂 -->
+      <div class="zone-card zone-1fvip">
+        <div class="zone-header">1️⃣ 1樓 — 包廂</div>
+        <div class="zone-body">
+          <div class="seats-grid" id="zone-1fvip"></div>
+        </div>
+      </div>
+
+    </div><!-- /zones-col -->
+
+    <!-- Right: sidebar -->
+
+    <div class="sidebar">
+
+      <!-- 總表 -->
+      <div class="summary-card">
+        <div class="summary-header">
+          📋 在座總表
+          <span class="summary-count" id="summary-count">0 位</span>
+        </div>
+        <div class="summary-body">
+          <div id="summary-empty" class="summary-empty">目前無客人在座</div>
+          <table class="summary-table" id="summary-table" style="display:none">
+            <thead>
+              <tr>
+                <th>座位</th>
+                <th>車牌</th>
+                <th>稱呼</th>
+                <th>特徵</th>
+              </tr>
+            </thead>
+            <tbody id="summary-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 公告欄 -->
+      <div class="notice-card">
+        <div class="notice-header">📢 公告欄</div>
+        <div class="notice-body">
+          <div class="notice-input-row">
+            <textarea id="notice-input" placeholder="輸入公告內容…"></textarea>
+            <button class="btn-notice-post" onclick="postNotice()">發布</button>
+          </div>
+          <div class="notice-list" id="notice-list">
+            <div class="notice-empty" id="notice-empty">暫無公告</div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /sidebar -->
+
+  </div><!-- /content-layout -->
+
+  <!-- 服務專員總表 -->
+  <div class="advisor-board-card">
+    <div class="advisor-board-header">
+      👨‍💼 服務專員總表
+      <span class="advisor-board-sub" id="advisor-board-sub"></span>
+    </div>
+    <div class="advisor-board-body" id="advisor-board-body">
+      <div class="advisor-empty">目前無客人在座</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModalOnBg(event)">
+  <div class="modal" id="modal">
+    <div class="modal-header" id="modal-header">
+      <h2 id="modal-title">登錄客戶資訊</h2>
+      <span class="seat-badge" id="modal-seat-badge">A1</span>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-footer" id="modal-footer"></div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── Config ───────────────────────────────────────────────────────────────────
+const SEATS = {
+  'B1沙發': ['B1-沙發1','B1-沙發2','B1-沙發3','B1-沙發4','B1-沙發5','B1-沙發6','B1-沙發7','B1-沙發8'],
+  'B1圓桌': ['B1-桌9','B1-桌10','B1-桌11'],
+  '1F沙發': ['1F-沙發1','1F-沙發2','1F-沙發3','1F-沙發4','1F-沙發5','1F-沙發6','1F-沙發7','1F-沙發8','1F-沙發9','1F-沙發10','1F-沙發11','1F-沙發12','1F-沙發13','1F-沙發14','1F-沙發15','1F-沙發16','1F-沙發17','1F-沙發18','1F-沙發19','1F-沙發20','1F-沙發21','1F-沙發22'],
+  '1F木椅': ['1F-木1','1F-木2','1F-木3','1F-木4','1F-木5','1F-木6','1F-木7','1F-木8','1F-木9','1F-木10','1F-木11','1F-木12','1F-木13','1F-木14','1F-木15','1F-木16','1F-木17','1F-木18','1F-木19','1F-木20'],
+  '1F圓桌': ['1F-桌1','1F-桌2','1F-桌3','1F-桌4'],
+  '1F包廂': ['1F-包廂1','1F-包廂2','1F-包廂3']
+};
+const STAFF = {
+  服務專員: ['李啟弘','張瑋涵','洪節慶','吳佳寧','柯建銘','朱辰芳','蔡承翰'],
+  維修技師: ['許翼煌','鄭桿曜','洪澤正','蔡瑞祥','施智誠','侯伯陽','呂俊誼','張鴻恩','許世源','黃國栓','李健銘','蔡旻樺','葉燿州','陳慶輝','梅世昌','蕭顯猛'],
+  登錄人員: ['李啟弘','張瑋涵','洪節慶','吳佳寧','柯建銘','朱辰芳','蔡承翰','張佳穎','潘孜寧']
+};
+function makeStaffField(key, inputId, selected='') {
+  const isCustom = selected && !STAFF[key].includes(selected);
+  const customVal = isCustom ? selected : '';
+  const showCustom = isCustom ? '' : 'display:none';
+  const opts = `<option value="">未填</option>` +
+    STAFF[key].map(n => `<option value="${n}" ${selected===n?'selected':''}>${n}</option>`).join('') +
+    `<option value="__custom__" ${isCustom?'selected':''}>自行登打…</option>`;
+  return `
+    <select id="${inputId}" onchange="toggleCustomStaff(this)">
+      ${opts}
+    </select>
+    <input type="text" id="${inputId}-custom" placeholder="請輸入姓名"
+           style="margin-top:4px;${showCustom}" value="${customVal}">
+  `;
+}
+function toggleCustomStaff(sel) {
+  const box = document.getElementById(sel.id + '-custom');
+  if (sel.value === '__custom__') {
+    box.style.display = '';
+    box.focus();
+  } else {
+    box.style.display = 'none';
+    box.value = '';
+  }
+}
+function getStaffValue(inputId) {
+  const sel = document.getElementById(inputId);
+  if (!sel) return '';
+  if (sel.value === '__custom__') {
+    return document.getElementById(inputId + '-custom').value.trim();
+  }
+  return sel.value;
+}
+function staffInputs(info={}) { return `
+  <div class="form-group form-row-2">
+    <div>
+      <label>服務專員</label>
+      ${makeStaffField('服務專員', 'inp-advisor', info.advisor||'')}
+    </div>
+    <div>
+      <label>維修技師</label>
+      ${makeStaffField('維修技師', 'inp-tech', info.tech||'')}
+    </div>
+  </div>
+  <div class="form-group">
+    <label>登錄／修改人員</label>
+    ${makeStaffField('登錄人員', 'inp-recorder', info.recorder||'')}
+  </div>
+`; }
+const STORAGE_KEY   = 'seat_manager_xindian_data';
+const FLOORPLAN_KEY = 'seat_manager_xindian_floorplan';
+
+// ─── Firestore Sync ───────────────────────────────────────────────────────────
+const FS_PROJECT = 'seat-manager-xindian';
+const FS_API_KEY = 'AIzaSyDzT7lKp2seFebZLaessy-IpEi2oEszwvs';
+const FS_BASE    = `https://firestore.googleapis.com/v1/projects/${FS_PROJECT}/databases/(default)/documents/seatmanager`;
+
+async function fsGet(docId) {
+  try {
+    const r = await fetch(`${FS_BASE}/${docId}?key=${FS_API_KEY}`);
+    if (!r.ok) return null;
+    const d = await r.json();
+    const raw = d.fields && d.fields.json && d.fields.json.stringValue;
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
+
+async function fsPut(docId, value) {
+  try {
+    await fetch(`${FS_BASE}/${docId}?key=${FS_API_KEY}&updateMask.fieldPaths=json`, {
+      method: 'PATCH',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ fields: { json: { stringValue: JSON.stringify(value) } } })
+    });
+  } catch {}
+}
+
+// ─── State ────────────────────────────────────────────────────────────────────
+let data = loadDataLocal();
+let currentSeat = null;
+let editMode = false;
+let _syncing = false;
+
+function loadDataLocal() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }
+  catch { return {}; }
+}
+
+async function saveData() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  await fsPut('seats', data);
+}
+
+async function pullData() {
+  const remote = await fsGet('seats');
+  if (remote && JSON.stringify(remote) !== JSON.stringify(data)) {
+    data = remote;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    renderAll();
+  }
+}
+
+async function pullNotices() {
+  const remote = await fsGet('notices');
+  if (remote && JSON.stringify(remote) !== JSON.stringify(_notices)) {
+    _notices = remote;
+    localStorage.setItem(NOTICES_KEY, JSON.stringify(_notices));
+    renderNotices();
+  }
+}
+
+function startSync() {
+  const syncBar = document.getElementById('sync-status');
+  if (syncBar) syncBar.textContent = '🔄 同步中...';
+  Promise.all([pullData(), pullNotices()]).then(() => {
+    if (syncBar) syncBar.textContent = '✅ 已同步';
+  }).catch(() => {
+    if (syncBar) syncBar.textContent = '⚠️ 離線模式';
+  });
+  setInterval(async () => {
+    await pullData();
+    await pullNotices();
+    if (syncBar) syncBar.textContent = '✅ ' + new Date().toLocaleTimeString('zh-TW');
+  }, 8000);
+}
+
+// ─── Render ───────────────────────────────────────────────────────────────────
+function renderAll() {
+  renderZone('zone-b1sofa',  SEATS['B1沙發'], 'square');
+  renderZone('zone-b1table', SEATS['B1圓桌'], 'circle');
+  renderZone('zone-1fsofa',  SEATS['1F沙發'], 'circle');
+  renderZone('zone-1fwood',  SEATS['1F木椅'], 'square');
+  renderZone('zone-1ftable', SEATS['1F圓桌'], 'circle');
+  renderZone('zone-1fvip',   SEATS['1F包廂'], 'square');
+  updateStats();
+  updateSummaryTable();
+  renderAdvisorBoard();
+}
+
+function renderAdvisorBoard() {
+  const body = document.getElementById('advisor-board-body');
+  const sub  = document.getElementById('advisor-board-sub');
+  const entries = Object.entries(data);
+  if (entries.length === 0) {
+    body.innerHTML = '<div class="advisor-empty">目前無客人在座</div>';
+    sub.textContent = '';
+    return;
+  }
+
+  // Group by advisor
+  const groups = {};
+  entries.forEach(([seatId, info]) => {
+    const key = info.advisor && info.advisor.trim() ? info.advisor.trim() : '__none__';
+    if (!groups[key]) groups[key] = [];
+    groups[key].push([seatId, info]);
+  });
+
+  // Sort each group by check-in time
+  Object.values(groups).forEach(arr => arr.sort((a,b) => (a[1].time||0)-(b[1].time||0)));
+
+  // Advisor order: defined list first, then unassigned last
+  const advisorOrder = STAFF['服務專員'];
+  const keys = [
+    ...advisorOrder.filter(n => groups[n]),
+    ...Object.keys(groups).filter(k => k !== '__none__' && !advisorOrder.includes(k)),
+    ...(groups['__none__'] ? ['__none__'] : [])
+  ];
+
+  const now = Date.now();
+
+  body.innerHTML = keys.map(key => {
+    const customers = groups[key];
+    const isUnassigned = key === '__none__';
+    const label = isUnassigned ? '未指定專員' : key;
+    const rows = customers.map(([seatId, info]) => {
+      const etaTag = info.eta ? (() => {
+        const [h,m] = info.eta.split(':').map(Number);
+        const etaMs = new Date().setHours(h,m,0,0);
+        const late = etaMs < now;
+        return `<span class="adv-tag eta ${late?'overdue':''}">${late?'⚠️ ':'🕐 '}${info.eta}</span>`;
+      })() : '';
+      const svcTag = info.service ? `<span class="adv-tag">${info.service}</span>` : '';
+      return `
+        <div class="advisor-customer" onclick="handleSeatClick('${seatId}')">
+          <div class="adv-seat-plate">
+            <span class="adv-seat">${seatId}</span>
+            <span class="adv-plate">${info.plate}</span>
+          </div>
+          ${info.name ? `<div class="adv-name">${info.name}</div>` : ''}
+          ${etaTag || svcTag ? `<div class="adv-meta">${svcTag}${etaTag}</div>` : ''}
+        </div>`;
+    }).join('');
+    return `
+      <div class="advisor-col ${isUnassigned?'advisor-col-unassigned':''}">
+        <div class="advisor-col-header">
+          <span>${label}</span>
+          <span class="adv-count">${customers.length} 位</span>
+        </div>
+        ${rows}
+      </div>`;
+  }).join('');
+
+  sub.textContent = `共 ${entries.length} 位客人 · ${keys.filter(k=>k!=='__none__').length} 位專員`;
+}
+
+function renderZone(containerId, seats, shape) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = '';
+  seats.forEach(id => {
+    const info = data[id];
+    const btn = document.createElement('button');
+    btn.className = `seat ${shape} ${info ? 'occupied' : 'empty'}`;
+    btn.id = `seat-${id}`;
+    btn.onclick = () => handleSeatClick(id);
+
+    if (info) {
+      btn.innerHTML = `
+        <span class="seat-id">${id}</span>
+        <span class="plate">${info.plate}</span>
+      `;
+      btn.title = `${id} | ${info.plate} | ${info.name || '—'} | ${info.note || '—'}`;
+    } else {
+      btn.textContent = id;
+      btn.title = `${id} — 空位`;
+    }
+    el.appendChild(btn);
+  });
+}
+
+function updateStats() {
+  const total = SEATS.白.length + SEATS.金.length + SEATS.黑.length;
+  const occupied = Object.keys(data).length;
+  document.getElementById('stat-total').textContent = total;
+  document.getElementById('stat-occupied').textContent = occupied;
+  document.getElementById('stat-empty').textContent = total - occupied;
+}
+
+// ─── Modal ────────────────────────────────────────────────────────────────────
+function handleSeatClick(seatId) {
+  currentSeat = seatId;
+  editMode = false;
+  const info = data[seatId];
+  const overlay = document.getElementById('modal-overlay');
+  const badge = document.getElementById('modal-seat-badge');
+  badge.textContent = seatId;
+  badge.style.background = info ? '#c0392b' : '#1a3c5e';
+
+  if (info) {
+    showInfoModal(seatId, info);
+  } else {
+    showCheckInModal(seatId);
+  }
+  overlay.classList.add('open');
+}
+
+function showCheckInModal(seatId) {
+  document.getElementById('modal-title').textContent = '登錄客戶資訊';
+  document.getElementById('modal-body').innerHTML = `
+    <div class="form-group">
+      <label>車牌號碼 <span class="required-star">*</span></label>
+      <input type="text" id="inp-plate" placeholder="例：ABC-1234" maxlength="10"
+             oninput="this.value=this.value.toUpperCase()">
+    </div>
+    <div class="form-group">
+      <label>車主姓名／稱呼</label>
+      <input type="text" id="inp-name" placeholder="例：林先生" maxlength="20">
+    </div>
+    <div class="form-group form-row-2">
+      <div>
+        <label>性別</label>
+        <select id="inp-gender">
+          <option value="">未填</option>
+          <option value="男性">男性</option>
+          <option value="女性">女性</option>
+        </select>
+      </div>
+      <div>
+        <label>服務項目</label>
+        <select id="inp-service">
+          <option value="">未填</option>
+          <option value="定保">定保</option>
+          <option value="維修">維修</option>
+          <option value="其他">其他</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>預估交車時間</label>
+      <input type="time" id="inp-eta">
+    </div>
+    ${staffInputs()}
+    <div class="form-group">
+      <label>特殊需求</label>
+      <textarea id="inp-special" rows="2" placeholder="例：需要充電、輪椅通道、嬰兒車..."></textarea>
+    </div>
+    <div class="form-group">
+      <label>外觀特徵備註</label>
+      <textarea id="inp-note" rows="2" placeholder="例：穿藍色外套、戴帽子、在看筆電"></textarea>
+    </div>
+  `;
+  document.getElementById('modal-footer').innerHTML = `
+    <button class="btn btn-secondary" onclick="closeModal()">取消</button>
+    <button class="btn btn-success" onclick="doCheckIn()">✅ 確認入座</button>
+  `;
+  setTimeout(() => document.getElementById('inp-plate').focus(), 80);
+}
+
+function showInfoModal(seatId, info) {
+  editMode = false;
+  document.getElementById('modal-title').textContent = '座位客戶資訊';
+  const since = info.time ? new Date(info.time).toLocaleString('zh-TW') : '—';
+  document.getElementById('modal-body').innerHTML = `
+    <div class="info-row">
+      <span class="info-label">車牌號碼</span>
+      <span class="info-value plate-display">${info.plate}</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">車主稱呼</span>
+      <span class="info-value">${info.name || '（未填寫）'}</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">性別</span>
+      <span class="info-value">${info.gender || '（未填寫）'}</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">服務項目</span>
+      <span class="info-value">${info.service || '（未填寫）'}</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">預估交車</span>
+      <span class="info-value">${info.eta || '（未填寫）'}</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">特殊需求</span>
+      <span class="info-value">${info.special || '（未填寫）'}</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">外觀特徵</span>
+      <span class="info-value">${info.note || '（未填寫）'}</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">服務專員</span>
+      <span class="info-value">${info.advisor || '（未填寫）'}</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">維修技師</span>
+      <span class="info-value">${info.tech || '（未填寫）'}</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">登錄人員</span>
+      <span class="info-value">${info.recorder || '（未填寫）'}</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">入座時間</span>
+      <span class="info-value time-display">${since}</span>
+    </div>
+  `;
+  document.getElementById('modal-footer').innerHTML = `
+    <button class="btn btn-secondary" onclick="closeModal()">關閉</button>
+    <button class="btn btn-warning" onclick="showMoveSeatModal('${seatId}')">🔀 換座位</button>
+    <button class="btn btn-primary" onclick="showEditModal('${seatId}')">✏️ 修改資料</button>
+    <button class="btn btn-danger" onclick="doCheckOut('${seatId}')">🚗 結案離座</button>
+  `;
+}
+
+function showEditModal(seatId) {
+  const info = data[seatId];
+  editMode = true;
+  document.getElementById('modal-title').textContent = '修改客戶資訊';
+  document.getElementById('modal-body').innerHTML = `
+    <div class="form-group">
+      <label>車牌號碼 <span class="required-star">*</span></label>
+      <input type="text" id="inp-plate" value="${info.plate}" maxlength="10"
+             oninput="this.value=this.value.toUpperCase()">
+    </div>
+    <div class="form-group">
+      <label>車主姓名／稱呼</label>
+      <input type="text" id="inp-name" value="${info.name || ''}" maxlength="20">
+    </div>
+    <div class="form-group form-row-2">
+      <div>
+        <label>性別</label>
+        <select id="inp-gender">
+          <option value="">未填</option>
+          <option value="男性" ${info.gender==='男性'?'selected':''}>男性</option>
+          <option value="女性" ${info.gender==='女性'?'selected':''}>女性</option>
+        </select>
+      </div>
+      <div>
+        <label>服務項目</label>
+        <select id="inp-service">
+          <option value="">未填</option>
+          <option value="定保" ${info.service==='定保'?'selected':''}>定保</option>
+          <option value="維修" ${info.service==='維修'?'selected':''}>維修</option>
+          <option value="其他" ${info.service==='其他'?'selected':''}>其他</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>預估交車時間</label>
+      <input type="time" id="inp-eta" value="${info.eta || ''}">
+    </div>
+    ${staffInputs(info)}
+    <div class="form-group">
+      <label>特殊需求</label>
+      <textarea id="inp-special" rows="2">${info.special || ''}</textarea>
+    </div>
+    <div class="form-group">
+      <label>外觀特徵備註</label>
+      <textarea id="inp-note" rows="2">${info.note || ''}</textarea>
+    </div>
+  `;
+  document.getElementById('modal-footer').innerHTML = `
+    <button class="btn btn-secondary" onclick="showInfoModal('${seatId}', data['${seatId}'])">返回</button>
+    <button class="btn btn-primary" onclick="doUpdate('${seatId}')">💾 儲存修改</button>
+  `;
+}
+
+async function doCheckIn() {
+  const plate = document.getElementById('inp-plate').value.trim();
+  if (!plate) { showToast('⚠️ 請填寫車牌號碼'); return; }
+  data[currentSeat] = {
+    plate,
+    name: document.getElementById('inp-name').value.trim(),
+    gender: document.getElementById('inp-gender').value,
+    service: document.getElementById('inp-service').value,
+    eta: document.getElementById('inp-eta').value,
+    advisor: getStaffValue('inp-advisor'),
+    tech: getStaffValue('inp-tech'),
+    recorder: getStaffValue('inp-recorder'),
+    special: document.getElementById('inp-special').value.trim(),
+    note: document.getElementById('inp-note').value.trim(),
+    time: Date.now()
+  };
+  await saveData();
+  renderAll();
+  closeModal();
+  showToast(`✅ ${currentSeat} 已登錄 ${plate}`);
+}
+
+async function doUpdate(seatId) {
+  const plate = document.getElementById('inp-plate').value.trim();
+  if (!plate) { showToast('⚠️ 請填寫車牌號碼'); return; }
+  data[seatId] = {
+    ...data[seatId],
+    plate,
+    name: document.getElementById('inp-name').value.trim(),
+    gender: document.getElementById('inp-gender').value,
+    service: document.getElementById('inp-service').value,
+    eta: document.getElementById('inp-eta').value,
+    advisor: getStaffValue('inp-advisor'),
+    tech: getStaffValue('inp-tech'),
+    recorder: getStaffValue('inp-recorder'),
+    special: document.getElementById('inp-special').value.trim(),
+    note: document.getElementById('inp-note').value.trim(),
+  };
+  await saveData();
+  renderAll();
+  closeModal();
+  showToast(`💾 ${seatId} 資料已更新`);
+}
+
+async function doCheckOut(seatId) {
+  const plate = data[seatId]?.plate || '';
+  if (!confirm(`確定要讓 ${seatId}（${plate}）結案離座？`)) return;
+  delete data[seatId];
+  await saveData();
+  renderAll();
+  closeModal();
+  showToast(`🚗 ${seatId} ${plate} 已結案離座`);
+}
+
+function showMoveSeatModal(fromSeatId) {
+  const allSeats = [...SEATS.白, ...SEATS.金, ...SEATS.黑];
+  const emptySeats = allSeats.filter(s => !data[s]);
+  document.getElementById('modal-title').textContent = '換座位';
+  if (emptySeats.length === 0) {
+    document.getElementById('modal-body').innerHTML = '<p style="color:#888;text-align:center;padding:20px">目前沒有空位可換</p>';
+    document.getElementById('modal-footer').innerHTML = `<button class="btn btn-secondary" onclick="showInfoModal('${fromSeatId}', data['${fromSeatId}'])">返回</button>`;
+    return;
+  }
+  document.getElementById('modal-body').innerHTML = `
+    <p style="font-size:0.9rem;color:#555;margin-bottom:8px">選擇要移到的空位（資訊將一併轉移）：</p>
+    <div class="move-seat-grid">
+      ${emptySeats.map(s => `<button class="move-seat-btn" onclick="doMoveSeat('${fromSeatId}','${s}')">${s}</button>`).join('')}
+    </div>
+  `;
+  document.getElementById('modal-footer').innerHTML = `<button class="btn btn-secondary" onclick="showInfoModal('${fromSeatId}', data['${fromSeatId}'])">返回</button>`;
+}
+
+async function doMoveSeat(fromId, toId) {
+  if (data[toId]) { showToast('⚠️ 該座位已有人，請重新選擇'); return; }
+  data[toId] = { ...data[fromId] };
+  delete data[fromId];
+  await saveData();
+  renderAll();
+  closeModal();
+  showToast(`🔀 已將資料從 ${fromId} 移至 ${toId}`);
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+  currentSeat = null;
+  editMode = false;
+  clearSearch();
+}
+
+function closeModalOnBg(e) {
+  if (e.target === document.getElementById('modal-overlay')) closeModal();
+}
+
+// ─── Search ───────────────────────────────────────────────────────────────────
+function doSearch() {
+  const q = document.getElementById('search-input').value.trim().toLowerCase();
+  const resultEl = document.getElementById('search-result');
+  // Clear highlight
+  document.querySelectorAll('.seat.search-highlight').forEach(el => el.classList.remove('search-highlight'));
+
+  if (!q) { resultEl.textContent = ''; return; }
+
+  const matches = [];
+  Object.entries(data).forEach(([seatId, info]) => {
+    if (
+      info.plate.toLowerCase().includes(q) ||
+      (info.name && info.name.toLowerCase().includes(q)) ||
+      (info.note && info.note.toLowerCase().includes(q))
+    ) {
+      matches.push(seatId);
+    }
+  });
+
+  matches.forEach(id => {
+    const el = document.getElementById(`seat-${id}`);
+    if (el) el.classList.add('search-highlight');
+  });
+
+  if (matches.length === 0) {
+    resultEl.textContent = '查無符合結果';
+  } else {
+    resultEl.textContent = `找到 ${matches.length} 個座位：${matches.join('、')}`;
+    // Auto-scroll to first match
+    const first = document.getElementById(`seat-${matches[0]}`);
+    if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+}
+
+function clearSearch() {
+  document.getElementById('search-input').value = '';
+  document.getElementById('search-result').textContent = '';
+  document.querySelectorAll('.seat.search-highlight').forEach(el => el.classList.remove('search-highlight'));
+}
+
+// ─── Toast ────────────────────────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2600);
+}
+
+// ─── Keyboard ─────────────────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal();
+  if (e.key === 'Enter' && document.getElementById('modal-overlay').classList.contains('open')) {
+    if (!editMode && !data[currentSeat]) doCheckIn();
+    else if (editMode) doUpdate(currentSeat);
+  }
+});
+
+// ─── Floor Plan Image ─────────────────────────────────────────────────────────
+function uploadFloorplan(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  if (file.size > 8 * 1024 * 1024) { showToast('⚠️ 圖片太大，請選擇 8MB 以內的檔案'); return; }
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const base64 = e.target.result;
+    localStorage.setItem(FLOORPLAN_KEY, base64);
+    showFloorplan(base64);
+    showToast('✅ 配置圖已更新');
+  };
+  reader.readAsDataURL(file);
+  event.target.value = '';
+}
+
+function deleteFloorplan() {
+  if (!confirm('確定要移除配置圖？')) return;
+  localStorage.removeItem(FLOORPLAN_KEY);
+  const img = document.getElementById('floorplan-img');
+  const empty = document.getElementById('floorplan-empty');
+  const delBtn = document.getElementById('btn-del-img');
+  img.src = '';
+  img.style.display = 'none';
+  empty.style.display = 'flex';
+  delBtn.style.display = 'none';
+  showToast('🗑️ 配置圖已移除');
+}
+
+function openZoom() {
+  document.getElementById('zoom-overlay').classList.add('open');
+}
+function closeZoom() {
+  document.getElementById('zoom-overlay').classList.remove('open');
+}
+
+function loadFloorplan() {
+  const saved = localStorage.getItem(FLOORPLAN_KEY);
+  if (saved) {
+    showFloorplan(saved);
+  } else {
+    // Show default bundled floor plan
+    showFloorplan('floorplan.png');
+  }
+}
+
+function showFloorplan(src) {
+  const img = document.getElementById('floorplan-img');
+  const empty = document.getElementById('floorplan-empty');
+  const delBtn = document.getElementById('btn-del-img');
+  const zoomImg = document.getElementById('zoom-img');
+  img.src = src;
+  zoomImg.src = src;
+  img.style.display = 'block';
+  empty.style.display = 'none';
+  // Only show delete button if it's a custom uploaded image (base64)
+  delBtn.style.display = src.startsWith('data:') ? 'inline-flex' : 'none';
+}
+
+// ─── Summary Table ────────────────────────────────────────────────────────────
+function updateSummaryTable() {
+  const entries = Object.entries(data);
+  const countEl = document.getElementById('summary-count');
+  const emptyEl = document.getElementById('summary-empty');
+  const tableEl = document.getElementById('summary-table');
+  const tbody   = document.getElementById('summary-tbody');
+
+  countEl.textContent = entries.length + ' 位';
+  if (entries.length === 0) {
+    emptyEl.style.display = 'block';
+    tableEl.style.display = 'none';
+    return;
+  }
+  emptyEl.style.display = 'none';
+  tableEl.style.display = 'table';
+
+  // Sort by check-in time ascending
+  entries.sort((a, b) => (a[1].time || 0) - (b[1].time || 0));
+
+  tbody.innerHTML = entries.map(([seatId, info]) => `
+    <tr onclick="handleSeatClick('${seatId}')" title="點擊查看詳細">
+      <td><span class="summary-seat-badge">${seatId}</span></td>
+      <td class="summary-plate">${info.plate}</td>
+      <td>${info.name || '—'}</td>
+      <td style="max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${info.note || ''}">${info.note || '—'}</td>
+    </tr>
+  `).join('');
+}
+
+// ─── Bulletin Board ───────────────────────────────────────────────────────────
+const NOTICES_KEY = 'seat_manager_xindian_notices';
+let _notices = loadNoticesLocal();
+
+function loadNoticesLocal() {
+  try { return JSON.parse(localStorage.getItem(NOTICES_KEY)) || []; }
+  catch { return []; }
+}
+
+async function saveNotices() {
+  localStorage.setItem(NOTICES_KEY, JSON.stringify(_notices));
+  await fsPut('notices', _notices);
+}
+function renderNotices() {
+  const listEl = document.getElementById('notice-list');
+  if (_notices.length === 0) {
+    listEl.innerHTML = '<div class="notice-empty">暫無公告</div>';
+    return;
+  }
+  listEl.innerHTML = _notices.map((n, i) => `
+    <div class="notice-item">
+      <button class="btn-notice-del" onclick="deleteNotice(${i})" title="刪除">✕</button>
+      <div class="notice-text">${escapeHtml(n.text)}</div>
+      <div class="notice-time">${new Date(n.time).toLocaleString('zh-TW')}</div>
+    </div>
+  `).join('');
+}
+async function postNotice() {
+  const inp  = document.getElementById('notice-input');
+  const text = inp.value.trim();
+  if (!text) { showToast('⚠️ 請輸入公告內容'); return; }
+  _notices.unshift({ text, time: Date.now() });
+  await saveNotices();
+  renderNotices();
+  inp.value = '';
+  showToast('📢 公告已發布');
+}
+async function deleteNotice(index) {
+  _notices.splice(index, 1);
+  await saveNotices();
+  renderNotices();
+}
+function escapeHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/\n/g,'<br>');
+}
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+renderAll();
+loadFloorplan();
+renderNotices();
+startSync();
+</script>
+</body>
+</html>
