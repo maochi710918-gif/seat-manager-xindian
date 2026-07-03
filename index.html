@@ -1588,7 +1588,7 @@ async function doCheckOut(seatId) {
 }
 
 function showMoveSeatModal(fromSeatId) {
-  const allSeats = [...SEATS.白, ...SEATS.金, ...SEATS.黑];
+  const allSeats = Object.keys(SEAT_POS);
   const emptySeats = allSeats.filter(s => !data[s]);
   document.getElementById('modal-title').textContent = '換座位';
   if (emptySeats.length === 0) {
