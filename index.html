@@ -53,113 +53,113 @@
   .stat-card.occupied .num { color: #e05252; }
   .stat-card.empty .num { color: #3aaa5c; }
 
-  /* Zone card */
-  .zone-card {
+  /* ── Floor Tabs ── */
+  .floor-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .floor-tab {
+    flex: 1;
+    padding: 11px;
+    border: 2px solid #1a3c5e;
+    background: white;
+    color: #1a3c5e;
+    border-radius: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background .15s, color .15s;
+  }
+  .floor-tab.active { background: #1a3c5e; color: white; }
+  .floor-panel { display: none; }
+  .floor-panel.active { display: block; }
+
+  /* ── Floor Map Card ── */
+  .floor-map-card {
     background: white;
     border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    box-shadow: 0 2px 12px rgba(0,0,0,.08);
     overflow: hidden;
   }
-  .zone-header {
+  .floor-map-header {
+    background: linear-gradient(135deg, #1a3c5e, #2d6a9f);
+    color: white;
     padding: 10px 16px;
-    font-size: 1rem;
-    font-weight: 700;
-    letter-spacing: 1px;
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 8px;
+    font-weight: 700;
+    font-size: 0.95rem;
   }
-  .zone-body {
-    padding: 16px;
-  }
-
-  /* B1 沙發 */
-  .zone-b1sofa .zone-header  { background: #1a3c5e; color: white; }
-  .zone-b1sofa .zone-body    { background: #e8f0fb; }
-  /* B1 圓桌 */
-  .zone-b1table .zone-header { background: #4a2060; color: white; }
-  .zone-b1table .zone-body   { background: #f3eafa; }
-  /* 1F 沙發 */
-  .zone-1fsofa .zone-header  { background: #1a6b45; color: white; }
-  .zone-1fsofa .zone-body    { background: #e8f5ee; }
-  /* 1F 木椅 */
-  .zone-1fwood .zone-header  { background: #7a4010; color: white; }
-  .zone-1fwood .zone-body    { background: #fdf0e8; }
-  /* 1F 圓桌 */
-  .zone-1ftable .zone-header { background: #8b6914; color: white; }
-  .zone-1ftable .zone-body   { background: #fdf5e0; }
-  /* 1F 包廂 */
-  .zone-1fvip .zone-header   { background: #8b1a1a; color: white; }
-  .zone-1fvip .zone-body     { background: #fdeaea; }
-
-  /* Seat grids */
-  .seats-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    justify-content: flex-start;
-  }
-  .seats-grid.white-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
-  }
-  .seats-grid.black-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-  }
-  .seats-grid.gold-grid {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 10px;
-  }
-
-  /* Seat button — circle */
-  .seat {
+  .floor-map-body {
     position: relative;
-    cursor: pointer;
-    border: none;
-    font-family: inherit;
-    transition: transform 0.15s, box-shadow 0.15s;
+    background: #f5f5f5;
+    min-height: 180px;
+  }
+  .floor-map-body img { width: 100%; display: block; }
+  .floor-map-empty {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    height: 220px;
+    color: #bbb;
+    gap: 10px;
+    font-size: 0.9rem;
+  }
+
+  /* ── Map Seat Buttons ── */
+  .map-seat {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    border: 2px solid transparent;
+    cursor: pointer;
+    font-family: inherit;
     font-weight: 700;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.15s, box-shadow 0.15s;
+    z-index: 10;
+    line-height: 1.2;
+    box-shadow: 0 1px 4px rgba(0,0,0,.25);
   }
-  .seat:hover { transform: scale(1.07); box-shadow: 0 4px 14px rgba(0,0,0,0.2); }
-  .seat:active { transform: scale(0.96); }
+  .map-seat:hover { transform: translate(-50%,-50%) scale(1.18); z-index: 20; box-shadow: 0 3px 10px rgba(0,0,0,.35); }
+  .map-seat:active { transform: translate(-50%,-50%) scale(0.95); }
 
-  .seat.circle {
-    width: 72px;
-    height: 72px;
+  /* Round seats (沙發, 木椅, 圓桌) */
+  .map-seat.round {
     border-radius: 50%;
-    font-size: 0.85rem;
+    width: 8%;
+    min-width: 34px;
+    max-width: 56px;
+    aspect-ratio: 1/1;
+    font-size: clamp(0.48rem, 1.4vw, 0.7rem);
   }
-  .seat.square {
-    width: 100%;
-    height: 56px;
+  /* Rect seats (包廂) */
+  .map-seat.rect {
     border-radius: 8px;
-    font-size: 0.8rem;
+    padding: 4px 8px;
+    min-width: 40px;
+    font-size: clamp(0.5rem, 1.2vw, 0.68rem);
   }
 
-  /* Empty state per zone */
-  .zone-b1sofa  .seat.empty { background: #ddeeff; border: 2px solid #7ab3e0; color: #1a3c5e; }
-  .zone-b1table .seat.empty { background: #ede8f5; border: 2px solid #9b7fd4; color: #4a2060; }
-  .zone-1fsofa  .seat.empty { background: #d9f0e5; border: 2px solid #5db88a; color: #1a6b45; }
-  .zone-1fwood  .seat.empty { background: #fce8d5; border: 2px solid #c4814a; color: #7a4010; }
-  .zone-1ftable .seat.empty { background: #fdf5d0; border: 2px solid #c9a030; color: #7a5800; }
-  .zone-1fvip   .seat.empty { background: #fde8e8; border: 2px solid #d47070; color: #8b1a1a; }
+  /* Empty colors by type */
+  .map-seat.type-sofa.empty  { background: #ddeeff; border-color: #7ab3e0; color: #1a3c5e; }
+  .map-seat.type-wood.empty  { background: #fce8d5; border-color: #c4814a; color: #7a4010; }
+  .map-seat.type-table.empty { background: #ede8f5; border-color: #9b7fd4; color: #4a2060; }
+  .map-seat.type-vip.empty   { background: #fde8e8; border-color: #d47070; color: #8b1a1a; }
 
-  /* Occupied state */
-  .seat.occupied {
-    background: linear-gradient(135deg, #ff6b6b, #e03a3a);
-    border: 2px solid #c0392b;
+  /* Occupied */
+  .map-seat.occupied {
+    background: linear-gradient(135deg, #e03a3a, #c0392b);
+    border-color: #a93226;
     color: white;
   }
-  .seat.occupied .seat-id { font-size: 0.65rem; opacity: 0.85; }
-  .seat.occupied .plate { font-size: 0.8rem; font-weight: 800; letter-spacing: 1px; }
+  .map-seat .sn { font-weight: 700; }
+  .map-seat .sp { font-size: 0.85em; opacity: 0.9; letter-spacing: 0.5px; }
 
   /* Modal overlay */
   .modal-overlay {
@@ -825,86 +825,59 @@
     <div class="search-result" id="search-result"></div>
   </div>
 
-  <!-- Floor Plan -->
-  <div class="floorplan-card">
-    <div class="floorplan-header">
-      <span>🗺️ 客休區配置圖</span>
-      <div class="floorplan-actions">
-        <button class="btn-upload" onclick="document.getElementById('file-input').click()">📁 上傳／更換圖片</button>
-        <button class="btn-del-img" id="btn-del-img" style="display:none" onclick="deleteFloorplan()">🗑️ 移除圖片</button>
-      </div>
-    </div>
-    <div class="floorplan-body" id="floorplan-body">
-      <div class="floorplan-empty" id="floorplan-empty">
-        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="1.5">
-          <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/>
-        </svg>
-        <span>尚未上傳配置圖，點擊右上角「上傳圖片」新增</span>
-      </div>
-      <img id="floorplan-img" src="" alt="客休區配置圖" style="display:none" onclick="openZoom()">
-    </div>
-    <input type="file" id="file-input" accept="image/*" onchange="uploadFloorplan(event)">
-  </div>
-
-  <!-- Zoom overlay -->
-  <div class="img-zoom-overlay" id="zoom-overlay" onclick="closeZoom()">
-    <span class="zoom-close" onclick="closeZoom()">✕</span>
-    <img id="zoom-img" src="" alt="放大圖">
-    <span class="zoom-hint">點擊任意處關閉</span>
-  </div>
 
   <!-- Two-column layout: zones + sidebar -->
   <div class="content-layout">
 
-    <!-- Left: seat zones -->
+    <!-- Left: floor maps -->
     <div class="zones-col">
 
-      <!-- B1 沙發區 -->
-      <div class="zone-card zone-b1sofa">
-        <div class="zone-header">🅱️ B1 — 沙發區（方形座位）</div>
-        <div class="zone-body">
-          <div class="seats-grid" id="zone-b1sofa"></div>
-        </div>
+      <!-- Floor tabs -->
+      <div class="floor-tabs">
+        <button class="floor-tab active" id="tab-b1" onclick="switchFloor('b1')">🅱️ B1</button>
+        <button class="floor-tab" id="tab-1f" onclick="switchFloor('1f')">1️⃣ 1樓</button>
       </div>
 
-      <!-- B1 圓桌區 -->
-      <div class="zone-card zone-b1table">
-        <div class="zone-header">🅱️ B1 — 圓桌區</div>
-        <div class="zone-body">
-          <div class="seats-grid" id="zone-b1table"></div>
+      <!-- B1 panel -->
+      <div class="floor-panel active" id="panel-b1">
+        <div class="floor-map-card">
+          <div class="floor-map-header">
+            <span>B1 平面圖</span>
+            <div style="display:flex;gap:6px">
+              <button class="btn-upload" onclick="document.getElementById('file-b1').click()">📁 上傳圖片</button>
+              <button class="btn-del-img" id="btn-del-b1" style="display:none" onclick="deleteFloorMap('b1')">🗑️ 移除</button>
+            </div>
+          </div>
+          <div class="floor-map-body" id="map-b1">
+            <div class="floor-map-empty" id="empty-b1">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+              <span>請上傳 B1 平面圖，座位將自動疊加顯示</span>
+            </div>
+            <img id="img-b1" src="" alt="B1" style="display:none;width:100%">
+          </div>
         </div>
+        <input type="file" id="file-b1" accept="image/*" style="display:none" onchange="uploadFloorMap('b1',event)">
       </div>
 
-      <!-- 1F 沙發區 -->
-      <div class="zone-card zone-1fsofa">
-        <div class="zone-header">1️⃣ 1樓 — 沙發區</div>
-        <div class="zone-body">
-          <div class="seats-grid" id="zone-1fsofa"></div>
+      <!-- 1F panel -->
+      <div class="floor-panel" id="panel-1f">
+        <div class="floor-map-card">
+          <div class="floor-map-header">
+            <span>1樓 平面圖</span>
+            <div style="display:flex;gap:6px">
+              <button class="btn-upload" onclick="document.getElementById('file-1f').click()">📁 上傳圖片</button>
+              <button class="btn-del-img" id="btn-del-1f" style="display:none" onclick="deleteFloorMap('1f')">🗑️ 移除</button>
+            </div>
+          </div>
+          <div class="floor-map-body" id="map-1f">
+            <div class="floor-map-empty" id="empty-1f">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+              <span>請上傳 1樓 平面圖，座位將自動疊加顯示</span>
+            </div>
+            <img id="img-1f" src="" alt="1F" style="display:none;width:100%">
+          </div>
         </div>
-      </div>
-
-      <!-- 1F 木椅區 -->
-      <div class="zone-card zone-1fwood">
-        <div class="zone-header">1️⃣ 1樓 — 木椅區</div>
-        <div class="zone-body">
-          <div class="seats-grid" id="zone-1fwood"></div>
-        </div>
-      </div>
-
-      <!-- 1F 圓桌區 -->
-      <div class="zone-card zone-1ftable">
-        <div class="zone-header">1️⃣ 1樓 — 圓桌區</div>
-        <div class="zone-body">
-          <div class="seats-grid" id="zone-1ftable"></div>
-        </div>
-      </div>
-
-      <!-- 1F 包廂 -->
-      <div class="zone-card zone-1fvip">
-        <div class="zone-header">1️⃣ 1樓 — 包廂</div>
-        <div class="zone-body">
-          <div class="seats-grid" id="zone-1fvip"></div>
-        </div>
+        <input type="file" id="file-1f" accept="image/*" style="display:none" onchange="uploadFloorMap('1f',event)">
       </div>
 
     </div><!-- /zones-col -->
@@ -983,14 +956,45 @@
 
 <script>
 // ─── Config ───────────────────────────────────────────────────────────────────
-const SEATS = {
-  'B1沙發': ['B1-沙發1','B1-沙發2','B1-沙發3','B1-沙發4','B1-沙發5','B1-沙發6','B1-沙發7','B1-沙發8'],
-  'B1圓桌': ['B1-桌9','B1-桌10','B1-桌11'],
-  '1F沙發': ['1F-沙發1','1F-沙發2','1F-沙發3','1F-沙發4','1F-沙發5','1F-沙發6','1F-沙發7','1F-沙發8','1F-沙發9','1F-沙發10','1F-沙發11','1F-沙發12','1F-沙發13','1F-沙發14','1F-沙發15','1F-沙發16','1F-沙發17','1F-沙發18','1F-沙發19','1F-沙發20','1F-沙發21','1F-沙發22'],
-  '1F木椅': ['1F-木1','1F-木2','1F-木3','1F-木4','1F-木5','1F-木6','1F-木7','1F-木8','1F-木9','1F-木10','1F-木11','1F-木12','1F-木13','1F-木14','1F-木15','1F-木16','1F-木17','1F-木18','1F-木19','1F-木20'],
-  '1F圓桌': ['1F-桌1','1F-桌2','1F-桌3','1F-桌4'],
-  '1F包廂': ['1F-包廂1','1F-包廂2','1F-包廂3']
+// Seat positions [left%, top%] on their floor plan image
+const SEAT_POS = {
+  // B1
+  'B1-沙發1':[34,17],'B1-沙發2':[61,17],
+  'B1-沙發3':[34,32],'B1-沙發4':[61,32],
+  'B1-沙發5':[34,51],'B1-沙發6':[61,51],
+  'B1-沙發7':[34,64],'B1-沙發8':[61,64],
+  'B1-桌9':[48,78],'B1-桌10':[83,57],'B1-桌11':[83,69],
+  // 1F
+  '1F-包廂1':[5,82],'1F-包廂2':[5,57],'1F-包廂3':[5,29],
+  '1F-沙發1':[26,88],'1F-沙發2':[26,71],'1F-沙發3':[26,55],
+  '1F-沙發4':[26,38],'1F-沙發5':[22,22],'1F-沙發6':[27,8],
+  '1F-沙發7':[18,12],'1F-沙發8':[22,30],'1F-沙發9':[22,44],
+  '1F-沙發10':[22,63],'1F-沙發11':[14,12],'1F-沙發12':[14,25],
+  '1F-沙發13':[14,38],'1F-沙發14':[14,60],
+  '1F-沙發15':[57,7],'1F-沙發16':[57,18],'1F-沙發17':[57,31],
+  '1F-沙發18':[57,44],'1F-沙發19':[69,7],'1F-沙發20':[69,18],
+  '1F-沙發21':[69,31],'1F-沙發22':[69,44],
+  '1F-木1':[43,5],'1F-木2':[50,5],
+  '1F-木3':[43,25],'1F-木4':[50,25],
+  '1F-木5':[43,36],'1F-木6':[50,36],
+  '1F-木7':[43,57],'1F-木8':[50,57],
+  '1F-木9':[75,19],'1F-木10':[75,31],
+  '1F-木11':[83,15],'1F-木12':[83,28],
+  '1F-木13':[88,14],'1F-木14':[88,27],
+  '1F-木15':[95,14],'1F-木16':[95,27],
+  '1F-木17':[79,43],'1F-木18':[85,43],
+  '1F-木19':[79,60],'1F-木20':[85,60],
+  '1F-桌1':[52,93],'1F-桌2':[68,93],
+  '1F-桌3':[96,93],'1F-桌4':[96,57],
 };
+function getSeatFloor(id){ return id.startsWith('B1-') ? 'b1' : '1f'; }
+function getSeatType(id){
+  if(id.includes('包廂')) return 'vip';
+  if(id.includes('沙發')) return 'sofa';
+  if(id.includes('木'))   return 'wood';
+  return 'table';
+}
+function getSeatLabel(id){ return id.replace('B1-','').replace('1F-',''); }
 const STAFF = {
   服務專員: ['李啟弘','張瑋涵','洪節慶','吳佳寧','柯建銘','朱辰芳','蔡承翰'],
   維修技師: ['許翼煌','鄭桿曜','洪澤正','蔡瑞祥','施智誠','侯伯陽','呂俊誼','張鴻恩','許世源','黃國栓','李健銘','蔡旻樺','葉燿州','陳慶輝','梅世昌','蕭顯猛'],
@@ -1124,15 +1128,79 @@ function startSync() {
 
 // ─── Render ───────────────────────────────────────────────────────────────────
 function renderAll() {
-  renderZone('zone-b1sofa',  SEATS['B1沙發'], 'square');
-  renderZone('zone-b1table', SEATS['B1圓桌'], 'circle');
-  renderZone('zone-1fsofa',  SEATS['1F沙發'], 'circle');
-  renderZone('zone-1fwood',  SEATS['1F木椅'], 'square');
-  renderZone('zone-1ftable', SEATS['1F圓桌'], 'circle');
-  renderZone('zone-1fvip',   SEATS['1F包廂'], 'square');
+  renderFloorMap('b1');
+  renderFloorMap('1f');
   updateStats();
   updateSummaryTable();
   renderAdvisorBoard();
+}
+
+function renderFloorMap(floor) {
+  const mapEl = document.getElementById('map-' + floor);
+  if (!mapEl) return;
+  mapEl.querySelectorAll('.map-seat').forEach(b => b.remove());
+  const imgEl = document.getElementById('img-' + floor);
+  if (!imgEl || imgEl.style.display === 'none') return;
+  Object.entries(SEAT_POS).forEach(([id, [lx, ty]]) => {
+    if (getSeatFloor(id) !== floor) return;
+    const info = data[id];
+    const type = getSeatType(id);
+    const label = getSeatLabel(id);
+    const shape = type === 'vip' ? 'rect' : 'round';
+    const btn = document.createElement('button');
+    btn.className = `map-seat ${shape} type-${type} ${info ? 'occupied' : 'empty'}`;
+    btn.style.left = lx + '%';
+    btn.style.top  = ty + '%';
+    btn.onclick = () => handleSeatClick(id);
+    btn.title = id + (info ? ` | ${info.plate}` : ' — 空位');
+    btn.innerHTML = info
+      ? `<span class="sn">${label}</span><span class="sp">${info.plate}</span>`
+      : `<span class="sn">${label}</span>`;
+    mapEl.appendChild(btn);
+  });
+}
+
+function switchFloor(floor) {
+  document.querySelectorAll('.floor-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.floor-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + floor).classList.add('active');
+  document.getElementById('panel-' + floor).classList.add('active');
+}
+
+function uploadFloorMap(floor, event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const src = e.target.result;
+    localStorage.setItem(STORAGE_KEY + '_map_' + floor, src);
+    showFloorMapImg(floor, src);
+    renderFloorMap(floor);
+  };
+  reader.readAsDataURL(file);
+}
+
+function deleteFloorMap(floor) {
+  localStorage.removeItem(STORAGE_KEY + '_map_' + floor);
+  const img = document.getElementById('img-' + floor);
+  img.style.display = 'none'; img.src = '';
+  document.getElementById('empty-' + floor).style.display = 'flex';
+  document.getElementById('btn-del-' + floor).style.display = 'none';
+  document.getElementById('map-' + floor).querySelectorAll('.map-seat').forEach(b => b.remove());
+}
+
+function showFloorMapImg(floor, src) {
+  const img = document.getElementById('img-' + floor);
+  img.src = src; img.style.display = 'block';
+  document.getElementById('empty-' + floor).style.display = 'none';
+  document.getElementById('btn-del-' + floor).style.display = 'inline-flex';
+}
+
+function loadFloorMaps() {
+  ['b1','1f'].forEach(floor => {
+    const saved = localStorage.getItem(STORAGE_KEY + '_map_' + floor);
+    if (saved) { showFloorMapImg(floor, saved); }
+  });
 }
 
 function renderAdvisorBoard() {
@@ -1226,7 +1294,7 @@ function renderZone(containerId, seats, shape) {
 }
 
 function updateStats() {
-  const total = SEATS.白.length + SEATS.金.length + SEATS.黑.length;
+  const total = Object.keys(SEAT_POS).length;
   const occupied = Object.keys(data).length;
   document.getElementById('stat-total').textContent = total;
   document.getElementById('stat-occupied').textContent = occupied;
@@ -1703,8 +1771,8 @@ function escapeHtml(str) {
 }
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
+loadFloorMaps();
 renderAll();
-loadFloorplan();
 renderNotices();
 startSync();
 </script>
