@@ -1417,6 +1417,9 @@ function handleSeatClick(seatId) {
     showCheckInModal(seatId);
   }
   overlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  document.body.style.position = 'fixed';
+  document.body.style.width = '100%';
 }
 
 function showCheckInModal(seatId) {
@@ -1666,6 +1669,9 @@ async function doMoveSeat(fromId, toId) {
 
 function closeModal() {
   document.getElementById('modal-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+  document.body.style.position = '';
+  document.body.style.width = '';
   currentSeat = null;
   editMode = false;
   clearSearch();
