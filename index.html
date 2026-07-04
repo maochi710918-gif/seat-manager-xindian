@@ -185,6 +185,18 @@
   .zone-seat .sn { font-weight: 700; }
   .zone-seat .sp { font-size: 0.82em; opacity: 0.9; }
 
+  /* Floor plan reference */
+  .floorplan-ref { margin: 0 12px 12px; border-radius: 8px; overflow: hidden; border: 1px solid #d0dcea; }
+  .floorplan-ref-toggle {
+    width: 100%; padding: 8px 12px; background: #eef3fa;
+    border: none; cursor: pointer; text-align: left;
+    font-size: 0.8rem; font-weight: 700; color: #1a3c5e;
+    display: flex; justify-content: space-between; align-items: center;
+    font-family: inherit;
+  }
+  .floorplan-ref-toggle:hover { background: #dce8f5; }
+  .floorplan-ref img { width: 100%; display: block; }
+
   /* Modal overlay */
   .modal-overlay {
     display: none;
@@ -1220,6 +1232,32 @@ function renderFloorMap(floor) {
     group.appendChild(seatsEl);
     zoneBody.appendChild(group);
   });
+
+  // Reference floor plan image (1F only)
+  if (floor === '1f') {
+    let refEl = mapEl.querySelector('.floorplan-ref');
+    if (!refEl) {
+      refEl = document.createElement('div');
+      refEl.className = 'floorplan-ref';
+      const btn = document.createElement('button');
+      btn.className = 'floorplan-ref-toggle';
+      btn.innerHTML = '🗺️ 平面圖參考 <span class="ref-arrow">▼</span>';
+      const imgWrap = document.createElement('div');
+      imgWrap.style.display = 'none';
+      const img = document.createElement('img');
+      img.src = DEFAULT_MAP['1f'];
+      img.alt = '1樓平面圖';
+      imgWrap.appendChild(img);
+      btn.onclick = () => {
+        const open = imgWrap.style.display !== 'none';
+        imgWrap.style.display = open ? 'none' : 'block';
+        btn.querySelector('.ref-arrow').textContent = open ? '▼' : '▲';
+      };
+      refEl.appendChild(btn);
+      refEl.appendChild(imgWrap);
+      mapEl.appendChild(refEl);
+    }
+  }
 }
 
 function switchFloor(floor) {
