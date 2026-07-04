@@ -1233,28 +1233,21 @@ function renderFloorMap(floor) {
     zoneBody.appendChild(group);
   });
 
-  // Reference floor plan image (1F only)
+  // Reference floor plan image (1F only) — always visible
   if (floor === '1f') {
     let refEl = mapEl.querySelector('.floorplan-ref');
     if (!refEl) {
       refEl = document.createElement('div');
       refEl.className = 'floorplan-ref';
-      const btn = document.createElement('button');
-      btn.className = 'floorplan-ref-toggle';
-      btn.innerHTML = '🗺️ 平面圖參考 <span class="ref-arrow">▼</span>';
-      const imgWrap = document.createElement('div');
-      imgWrap.style.display = 'none';
+      const lbl = document.createElement('div');
+      lbl.className = 'zone-label';
+      lbl.style.cssText = 'margin:0 0 8px;';
+      lbl.textContent = '🗺️ 1樓平面圖參考';
       const img = document.createElement('img');
       img.src = DEFAULT_MAP['1f'];
       img.alt = '1樓平面圖';
-      imgWrap.appendChild(img);
-      btn.onclick = () => {
-        const open = imgWrap.style.display !== 'none';
-        imgWrap.style.display = open ? 'none' : 'block';
-        btn.querySelector('.ref-arrow').textContent = open ? '▼' : '▲';
-      };
-      refEl.appendChild(btn);
-      refEl.appendChild(imgWrap);
+      refEl.appendChild(lbl);
+      refEl.appendChild(img);
       mapEl.appendChild(refEl);
     }
   }
