@@ -161,25 +161,29 @@
   .map-seat .sn { font-weight: 700; }
   .map-seat .sp { font-size: 0.85em; opacity: 0.9; letter-spacing: 0.5px; }
 
-  /* Seat list grid (no image mode) */
-  .seat-list-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    padding: 12px;
+  /* Zone grouped layout */
+  .zone-body { padding: 10px 12px; display: flex; flex-direction: column; gap: 10px; }
+  .zone-group { background: #f4f7fb; border-radius: 10px; padding: 10px 12px; border: 1px solid #e0e8f0; }
+  .zone-label { font-size: 0.78rem; font-weight: 700; color: #1a3c5e; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid #d0dcea; letter-spacing: 0.5px; }
+  .zone-seats { display: flex; flex-wrap: wrap; gap: 7px; }
+  .zone-seat {
+    width: 58px; height: 52px;
+    border-radius: 8px; border: 2px solid transparent;
+    cursor: pointer; font-family: inherit; font-weight: 700;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    font-size: 0.68rem; line-height: 1.25;
+    transition: transform 0.12s, box-shadow 0.12s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12);
   }
-  .seat-list-grid .map-seat {
-    position: relative;
-    transform: none;
-    width: 62px;
-    height: 62px;
-    min-width: unset;
-    max-width: unset;
-    font-size: 0.7rem;
-  }
-  .seat-list-grid .map-seat:hover {
-    transform: scale(1.12);
-  }
+  .zone-seat:hover { transform: scale(1.1); box-shadow: 0 3px 8px rgba(0,0,0,0.22); z-index: 1; }
+  .zone-seat.type-vip.empty   { background: #fde8e8; border-color: #d47070; color: #8b1a1a; }
+  .zone-seat.type-sofa.empty  { background: #ddeeff; border-color: #7ab3e0; color: #1a3c5e; }
+  .zone-seat.type-wood.empty  { background: #fce8d5; border-color: #c4814a; color: #7a4010; }
+  .zone-seat.type-table.empty { background: #ede8f5; border-color: #9b7fd4; color: #4a2060; }
+  .zone-seat.occupied { background: linear-gradient(135deg,#e03a3a,#c0392b); border-color: #a93226; color: white; }
+  .zone-seat .sn { font-weight: 700; }
+  .zone-seat .sp { font-size: 0.82em; opacity: 0.9; }
 
   /* Modal overlay */
   .modal-overlay {
@@ -1009,6 +1013,21 @@ const SEAT_POS = {
   '1F-桌1':[50,88],'1F-桌2':[69,88],
   '1F-桌3':[93,88],'1F-桌4':[95,59],
 };
+const ZONES = {
+  b1: [
+    { name: 'B1 沙發區', seats: ['B1-沙發1','B1-沙發2','B1-沙發3','B1-沙發4','B1-沙發5','B1-沙發6','B1-沙發7','B1-沙發8'] },
+    { name: 'B1 桌區', seats: ['B1-桌9','B1-桌10','B1-桌11'] },
+  ],
+  '1f': [
+    { name: '包廂區', seats: ['1F-包廂1','1F-包廂2','1F-包廂3'] },
+    { name: '沙發區（左側）', seats: ['1F-沙發11','1F-沙發12','1F-沙發13','1F-沙發14','1F-沙發7','1F-沙發8','1F-沙發9','1F-沙發10','1F-沙發1','1F-沙發2','1F-沙發3','1F-沙發4','1F-沙發5','1F-沙發6'] },
+    { name: '沙發區（右側）', seats: ['1F-沙發15','1F-沙發16','1F-沙發17','1F-沙發18','1F-沙發19','1F-沙發20','1F-沙發21','1F-沙發22'] },
+    { name: '木桌1 · 木桌2', seats: ['1F-木1','1F-木2','1F-木3','1F-木4','1F-木5','1F-木6','1F-木7','1F-木8'] },
+    { name: '低木桌4 · 木桌5', seats: ['1F-木9','1F-木10','1F-木17','1F-木18','1F-木19','1F-木20'] },
+    { name: '木桌6', seats: ['1F-木11','1F-木12','1F-木13','1F-木14','1F-木15','1F-木16'] },
+    { name: '圓桌區', seats: ['1F-桌1','1F-桌2','1F-桌3','1F-桌4'] },
+  ],
+};
 function getSeatFloor(id){ return id.startsWith('B1-') ? 'b1' : '1f'; }
 function getSeatType(id){
   if(id.includes('包廂')) return 'vip';
@@ -1160,55 +1179,46 @@ function renderAll() {
 function renderFloorMap(floor) {
   const mapEl = document.getElementById('map-' + floor);
   if (!mapEl) return;
-  mapEl.querySelectorAll('.map-seat').forEach(b => b.remove());
+  // Hide image elements — always use zone grouped mode
   const imgEl = document.getElementById('img-' + floor);
-  const hasImg = imgEl && imgEl.style.display !== 'none';
-  // Show seat list mode when no image; overlay mode when image loaded
+  if (imgEl) imgEl.style.display = 'none';
+  const emptyEl = document.getElementById('empty-' + floor);
+  if (emptyEl) emptyEl.style.display = 'none';
   const listEl = document.getElementById('seat-list-' + floor);
-  if (!hasImg) {
-    if (listEl) {
-      listEl.style.display = '';
-      listEl.innerHTML = '';
-      Object.entries(SEAT_POS).forEach(([id, pos]) => {
-        if (getSeatFloor(id) !== floor) return;
-        const info = data[id];
-        const type = getSeatType(id);
-        const label = getSeatLabel(id);
-        const btn = document.createElement('button');
-        btn.className = `map-seat round type-${type} ${info ? 'occupied' : 'empty'}`;
-        btn.style.position = 'relative';
-        btn.style.transform = 'none';
-        btn.style.width = '60px';
-        btn.style.height = '60px';
-        btn.style.minWidth = '';
-        btn.style.maxWidth = '';
-        btn.onclick = () => handleSeatClick(id);
-        btn.title = id + (info ? ` | ${info.plate}` : ' — 空位');
-        btn.innerHTML = info
-          ? `<span class="sn">${label}</span><span class="sp">${info.plate}</span>`
-          : `<span class="sn">${label}</span>`;
-        listEl.appendChild(btn);
-      });
-    }
-    return;
+  if (listEl) listEl.style.display = 'none';
+
+  let zoneBody = mapEl.querySelector('.zone-body');
+  if (!zoneBody) {
+    zoneBody = document.createElement('div');
+    zoneBody.className = 'zone-body';
+    mapEl.appendChild(zoneBody);
   }
-  if (listEl) { listEl.innerHTML = ''; listEl.style.display = 'none'; }
-  Object.entries(SEAT_POS).forEach(([id, [lx, ty]]) => {
-    if (getSeatFloor(id) !== floor) return;
-    const info = data[id];
-    const type = getSeatType(id);
-    const label = getSeatLabel(id);
-    const shape = type === 'vip' ? 'rect' : 'round';
-    const btn = document.createElement('button');
-    btn.className = `map-seat ${shape} type-${type} ${info ? 'occupied' : 'empty'}`;
-    btn.style.left = lx + '%';
-    btn.style.top  = ty + '%';
-    btn.onclick = () => handleSeatClick(id);
-    btn.title = id + (info ? ` | ${info.plate}` : ' — 空位');
-    btn.innerHTML = info
-      ? `<span class="sn">${label}</span><span class="sp">${info.plate}</span>`
-      : `<span class="sn">${label}</span>`;
-    mapEl.appendChild(btn);
+  zoneBody.innerHTML = '';
+
+  (ZONES[floor] || []).forEach(zone => {
+    const group = document.createElement('div');
+    group.className = 'zone-group';
+    const lbl = document.createElement('div');
+    lbl.className = 'zone-label';
+    lbl.textContent = zone.name;
+    group.appendChild(lbl);
+    const seatsEl = document.createElement('div');
+    seatsEl.className = 'zone-seats';
+    zone.seats.forEach(id => {
+      const info = data[id];
+      const type = getSeatType(id);
+      const label = getSeatLabel(id);
+      const btn = document.createElement('button');
+      btn.className = `zone-seat type-${type} ${info ? 'occupied' : 'empty'}`;
+      btn.onclick = () => handleSeatClick(id);
+      btn.title = id + (info ? ` | ${info.plate}` : ' — 空位');
+      btn.innerHTML = info
+        ? `<span class="sn">${label}</span><span class="sp">${info.plate}</span>`
+        : `<span class="sn">${label}</span>`;
+      seatsEl.appendChild(btn);
+    });
+    group.appendChild(seatsEl);
+    zoneBody.appendChild(group);
   });
 }
 
